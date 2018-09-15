@@ -1,9 +1,13 @@
 Rails.application.routes.draw do
   scope :api, defaults: {format: :json} do
-    resources :examples
-    devise_for :users, controllers: {sessions: 'sessions'}
-    devise_scope :user do
-      get 'users/current', to: 'sessions#show'
+    devise_for :users, :controllers => { :sessions => "api/v1/sessions" }
+
+    namespace :v1 do
+      devise_scope :user do
+        get 'users/current', to: 'sessions#show'
+      end
+      resources :examples
     end
+
   end
 end

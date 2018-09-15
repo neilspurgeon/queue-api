@@ -12,7 +12,7 @@
 #   end
 # end
 
-class SessionsController < Devise::SessionsController
+class V1::SessionsController < Devise::SessionsController
   def create
     print current_token
     super { @token = current_token }

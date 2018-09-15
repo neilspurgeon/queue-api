@@ -1,4 +1,4 @@
-class ExamplesController < ApplicationController
+class V1::ExamplesController < ApplicationController
 
   before_action :authenticate_user!
 
