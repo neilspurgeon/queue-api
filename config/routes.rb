@@ -6,7 +6,7 @@ Rails.application.routes.draw do
       devise_scope :user do
         get 'users/current', to: 'sessions#show'
       end
-      resources :examples
+      post 'spotify/authenticate', to: 'spotify#authenticate'
     end
 
   end
