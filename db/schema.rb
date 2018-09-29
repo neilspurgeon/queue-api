@@ -15,13 +15,6 @@ ActiveRecord::Schema.define(version: 20180915203254) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
-  create_table "examples", force: :cascade do |t|
-    t.string   "name"
-    t.string   "color"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
   create_table "jwt_blacklists", force: :cascade do |t|
     t.string   "jti", null: false
     t.datetime "exp", null: false

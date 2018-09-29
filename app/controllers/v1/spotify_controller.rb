@@ -10,7 +10,7 @@ class V1::SpotifyController < ApplicationController
       body: {
         grant_type: 'authorization_code',
         code: params[:code],
-        redirect_uri: params[:redirect_uri],
+        redirect_uri: 'queueapp://spotify-redirect',
         client_id: '3983df69e7664e75a49cab7d3408d4af',
         client_secret: Rails.application.secrets.spotify_secret
       }
@@ -19,6 +19,8 @@ class V1::SpotifyController < ApplicationController
     @data = self.class.post('/api/token', options)
 
     render :json => @data
+
+    p @data
 
   end
 
