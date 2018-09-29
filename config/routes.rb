@@ -7,6 +7,7 @@ Rails.application.routes.draw do
         get 'users/current', to: 'sessions#show'
       end
       post 'spotify/authenticate', to: 'spotify#authenticate'
+      post 'spotify/refresh_token', to: 'spotify#refresh_token'
     end
 
   end
