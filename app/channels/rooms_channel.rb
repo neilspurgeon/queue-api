@@ -2,6 +2,7 @@ class RoomsChannel < ApplicationCable::Channel
   def subscribed
     stream_from "rooms_channel"
     p '~~ Subscribed to Rooms Channel ~~'
+    p current_user
   end
 
   def track_change(data)
