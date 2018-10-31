@@ -4,7 +4,7 @@ class V1::RoomController < ApplicationController
 
   def index
     rooms = Room.all
-    render json: 'rooms'
+    render json: rooms.to_json
   end
 
   def create
