@@ -10,12 +10,11 @@ class V1::RoomController < ApplicationController
   def create
     room = Room.new(room_params)
     room.user_id = current_user.id
-    p 'created new room'
 
     if room.save
-      render :json => {'success': 'yes'}
+      render json: room.to_json
     else
-      render :json => {'success': 'no'}
+      render :json => {'error': 'could not create room'}
     end
 
   end
