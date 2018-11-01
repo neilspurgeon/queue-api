@@ -1,9 +1,9 @@
 class RoomsChannel < ApplicationCable::Channel
   def subscribed
-    stream_from 'rooms_channel'
-    p '~~ Subscribed to Rooms Channel ~~'
+    # need to stream for correct room channel id!!!
+    stream_from "rooms_channel_#{params[:room]}"
+    p "~~ Subscribed to rooms_channel_#{params[:room]} ~~"
     p current_user
-    p params[:room]
   end
 
   def track_change(data)
@@ -13,9 +13,7 @@ class RoomsChannel < ApplicationCable::Channel
       }
     }
 
-    p payload
-
-    ActionCable.server.broadcast('rooms_channel', payload )
+    ActionCable.server.broadcast("rooms_channel_#{params[:room]}", payload )
   end
 
   def unsubscribed
