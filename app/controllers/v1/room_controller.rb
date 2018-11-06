@@ -19,6 +19,10 @@ class V1::RoomController < ApplicationController
 
   end
 
+  def show
+
+  end
+
   private
 
   def room_params
