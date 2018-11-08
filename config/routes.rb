@@ -8,6 +8,7 @@ Rails.application.routes.draw do
         get 'users/current', to: 'sessions#show'
         post 'rooms', to: 'room#create'
         get 'rooms', to: 'room#index'
+        get 'rooms/:id', to: 'room#show'
       end
 
       post 'spotify/authenticate', to: 'spotify#authenticate'

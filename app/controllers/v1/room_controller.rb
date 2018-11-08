@@ -20,7 +20,9 @@ class V1::RoomController < ApplicationController
   end
 
   def show
-
+    room = Room.find(params[:id])
+    p room
+    render json: room.to_json
   end
 
   private

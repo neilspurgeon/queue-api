@@ -14,11 +14,13 @@ class RoomsChannel < ApplicationCable::Channel
     })
   end
 
-  def track_change(data)
+  def track_change(track)
+    room = Room.find(params[:room])
+    room.current_track = track.to_json
+    room.save
+
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'trackChanged': {
-        'track': data
-      }
+      'trackChanged': track
     })
   end
 
