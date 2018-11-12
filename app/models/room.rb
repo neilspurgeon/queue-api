@@ -11,28 +11,24 @@ class Room < ApplicationRecord
     queue = self.queue
     count = self.members.count
 
-    if (count == 1)
+    if (self.queue.nil?)
 
-      queue = track
+      queue = [track]
+      self.update_column(:queue, queue)
 
     else
 
       user_i = self.members.index(user)
-
       # the inital order position the currently playing user
       current_order_i = self.queue.index(self.current_track)
-
       # find place in queue to add track
       position = ((count - current_order_i) + user_i) % count
-
       # place in correct queue position
+      # need to change schema to refrences
       queue[position] = track
 
+      self.update_column(:queue, queue)
     end
-
-    self.queue = queue
-    self.save
-
   end
 
   def set_playing(bool)
@@ -43,11 +39,8 @@ class Room < ApplicationRecord
     next_i = self.queue.index{|x|!x.nil?}
 
     if (next_i.nil?)
-      self.playing = false
+      self.update_column(:playing, false)
       # self.current_track = nil
-      self.save
-      return
-
     else
 
       track = self.queue[next_i]
@@ -55,18 +48,19 @@ class Room < ApplicationRecord
       # reorder queue
       arr_a = self.queue.splice(next_i, self.queue.length)
       arr_b   = self.queue.splice(0, next_i)
-      queue = arr_a + arr_b
+      queue = (arr_a + arr_b)
 
       self.current_track = track
-      self.queue = queue
-      self.save
-
+      self.update_column(:queue, queue)
     end
   end
 
   def add_user(user)
     # change to '<< user'
     self.members << user
+
+    # create empty arr
+    self.queue = [] if self.queue.nil?
 
     # add placeholder
     self.queue.push(nil)
@@ -89,11 +83,4 @@ class Room < ApplicationRecord
     self.save
 
   end
-
-  # private
-
-  # def destroy_memebers
-  #   self.members.destroy_all
-  # end
-
 end

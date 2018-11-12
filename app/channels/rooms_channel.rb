@@ -8,7 +8,7 @@ class RoomsChannel < ApplicationCable::Channel
 
     # Large initial data should be sent in HTTP request and action cable to broadcast small updates
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'memberJoined': { current_user }
+      'memberJoined': current_user.to_json
     })
   end
 
@@ -18,7 +18,7 @@ class RoomsChannel < ApplicationCable::Channel
     room.play_next
 
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'trackChanged': track
+      'trackChanged': 'track'
     })
   end
 
@@ -30,6 +30,7 @@ class RoomsChannel < ApplicationCable::Channel
   def update_user_queue(track)
     room = Room.find(params[:room])
     track = current_user.tracks.create(track: track)
+
     room.update_track(track, current_user)
   end
 
