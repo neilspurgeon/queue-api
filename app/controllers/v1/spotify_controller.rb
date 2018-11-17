@@ -5,6 +5,7 @@ class V1::SpotifyController < ApplicationController
   # before_action :authenticate_user!
 
   def authenticate
+     p 'authenticate hit'
     options = {
       body: {
         grant_type: 'authorization_code',
@@ -20,6 +21,7 @@ class V1::SpotifyController < ApplicationController
   end
 
   def refresh_token
+    p 'refresh token hit'
     options = {
       body: {
         grant_type: 'refresh_token',

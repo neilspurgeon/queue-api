@@ -72,8 +72,11 @@ class Room < ApplicationRecord
     # remove from queue
     count = self.members.count
     user_i = self.members.index(user)
+    p user_i
     current_order_i = self.queue.index(self.current_track)
+    p current_order_i
     position = ((count - current_order_i) + user_i) % count
+    p 'position ' + position
 
     self.queue.delete_at(position)
     self.save
