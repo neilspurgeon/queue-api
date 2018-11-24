@@ -28,10 +28,16 @@ class RoomsChannel < ApplicationCable::Channel
   end
 
   def update_user_queue(track)
+    p 'udpate user queue'
     room = Room.find(params[:room])
     track = current_user.tracks.create(track: track)
 
+    # this should really only broadcast to the room host
+    # I think we can broadcast on the host channel here, just need to store host userID on Room to use
     room.update_track(track, current_user)
+    ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+      'sharedQueueChanged': room.queue
+    })
   end
 
   def unsubscribed

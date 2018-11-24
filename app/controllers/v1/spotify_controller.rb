@@ -22,16 +22,18 @@ class V1::SpotifyController < ApplicationController
 
   def refresh_token
     p 'refresh token hit'
+    p params
     options = {
       body: {
         grant_type: 'refresh_token',
-        refresh_token: params[:code],
+        refresh_token: params[:refresh_token],
         client_id: '3983df69e7664e75a49cab7d3408d4af',
         client_secret: Rails.application.secrets.spotify_secret
       }
     }
 
     @data = self.class.post('/api/token', options)
+    p @data
     render :json => @data
   end
 
