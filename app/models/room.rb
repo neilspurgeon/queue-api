@@ -76,7 +76,6 @@ class Room < ApplicationRecord
     current_order_i = self.queue.index(self.current_track)
     p current_order_i
     position = ((count - current_order_i) + user_i) % count
-    p 'position ' + position
 
     self.queue.delete_at(position)
     self.save
