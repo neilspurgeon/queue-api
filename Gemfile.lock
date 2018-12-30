@@ -1,5 +1,5 @@
 GEM
-  remote: https://rubygems.org/
+  remote: http://rubygems.org/
   specs:
     actioncable (5.0.7)
       actionpack (= 5.0.7)
@@ -176,4 +176,4 @@ DEPENDENCIES
   tzinfo-data
 
 BUNDLED WITH
-   1.16.2
+   1.16.6
