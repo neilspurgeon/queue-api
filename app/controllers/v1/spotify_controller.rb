@@ -15,8 +15,6 @@ class V1::SpotifyController < ApplicationController
         client_secret: Rails.application.secrets.spotify_secret
       }
     }
-    p 'options'
-    p options
 
     @data = self.class.post('/api/token', options)
     render :json => @data
