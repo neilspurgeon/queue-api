@@ -60,6 +60,10 @@ GEM
     devise-jwt (0.5.8)
       devise (~> 4.0)
       warden-jwt_auth (~> 0.3.5)
+    dotenv (2.6.0)
+    dotenv-rails (2.6.0)
+      dotenv (= 2.6.0)
+      railties (>= 3.2, < 6.0)
     dry-auto_inject (0.6.0)
       dry-container (>= 0.3.4)
     dry-configurable (0.7.0)
@@ -169,6 +173,7 @@ DEPENDENCIES
   byebug
   devise
   devise-jwt
+  dotenv-rails
   httparty
   jbuilder (~> 2.5)
   listen (~> 3.0.5)
