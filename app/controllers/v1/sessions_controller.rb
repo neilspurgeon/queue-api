@@ -1,6 +1,5 @@
 class V1::SessionsController < Devise::SessionsController
   def create
-    print current_token
     super { @token = current_token }
   end
 
