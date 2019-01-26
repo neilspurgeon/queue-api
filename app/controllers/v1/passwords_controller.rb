@@ -7,13 +7,13 @@ class V1::PasswordsController < Devise::PasswordsController
     new_password = password_update_params[:new_password]
 
     if !current_user.valid_password?(current_password)
-     return render :json => {'error': 'Your current password is incorrect'}
+     return render :status => 401, :json => {'error': 'Your current password is incorrect'}
     end
 
     current_user.password = new_password
 
     if !current_user.valid?
-      return render :json => {'error': 'Your new password is not valid'}
+      return render :status => 400, :json => {'error': 'Your new password is not valid'}
     end
 
     current_user.save
