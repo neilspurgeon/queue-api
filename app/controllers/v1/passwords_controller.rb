@@ -3,6 +3,7 @@ class V1::PasswordsController < Devise::PasswordsController
   before_action :authenticate_user!
 
   def update
+
     current_password = password_update_params[:current_password]
     new_password = password_update_params[:new_password]
 

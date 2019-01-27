@@ -8,6 +8,8 @@ class V1::RoomController < ApplicationController
   end
 
   def create
+    p params
+    p'––––––––––––––––––––––––––––––––––––––'
     room = Room.new(room_params)
     room.user_id = current_user.id
 
