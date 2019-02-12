@@ -6,9 +6,12 @@ class RoomsChannel < ApplicationCable::Channel
     room = Room.find(params[:room])
     room.add_user(current_user)
 
+    p 'SUBSCRIBED_______________________________________'
+
     # Large initial data should be sent in HTTP request and action cable to broadcast small updates
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'memberJoined': current_user
+      'memberJoined': current_user,
+      'members': room.members
     })
   end
 
@@ -68,8 +71,9 @@ class RoomsChannel < ApplicationCable::Channel
     room.remove_user(current_user)
 
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'unsubscribed': {
-        'members': room.members
+      'memberLeft': {
+        'members': room.members,
+        'sharedQueueChanged': room.queue
       }
     })
 
