@@ -20,6 +20,7 @@ Rails.application.routes.draw do
 
       post 'spotify/authenticate', to: 'spotify#authenticate'
       post 'spotify/refresh_token', to: 'spotify#refresh_token'
+      get 'rooms/find/:id', to: 'room#find'
 
       mount ActionCable.server => '/cable'
     end

@@ -8,8 +8,6 @@ class V1::RoomController < ApplicationController
   end
 
   def create
-    p params
-    p'––––––––––––––––––––––––––––––––––––––'
     room = Room.new(room_params)
     room.user_id = current_user.id
 
@@ -23,8 +21,16 @@ class V1::RoomController < ApplicationController
 
   def show
     room = Room.find(params[:id])
-    p room
-    render json: room.to_json
+    render json: room.to_json(:include => :members)
+  end
+
+  def find
+    room = Room.find(params[:id])
+    if room
+      render json: room.to_json(:include => :members)
+    else
+      return render :status => 404, :error => "Room not found", :json => {'error': 'We could not find a match for your invite code.'}
+    end
   end
 
   private
