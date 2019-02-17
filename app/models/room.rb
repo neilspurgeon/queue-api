@@ -19,6 +19,10 @@ class Room < ApplicationRecord
     self.members << user
 
     # create empty arr
+    self.current_dj_order = [] if self.current_dj_order.nil?
+    self.current_dj_order.push(user)
+
+    # create empty arr
     self.queue = [] if self.queue.nil?
 
     # add placeholder
@@ -30,6 +34,11 @@ class Room < ApplicationRecord
     # remove from queue
     position = self.queue.index{|i| i['user_id'] == user.id}
     self.queue.delete_at(position)
+    self.save
+
+    # remove dj
+    dj_i = self.current_dj_order.index{|i| i['user_id'] == user.id}
+    self.current_dj_order.delete_at(dj_i)
     self.save
 
     # remove from members
