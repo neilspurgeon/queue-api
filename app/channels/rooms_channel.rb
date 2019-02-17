@@ -15,45 +15,82 @@ class RoomsChannel < ApplicationCable::Channel
     })
   end
 
-  def played_from_shared_queue(data)
+  def start_playing()
+    # find current room
     room = Room.find(params[:room])
-    track = data['track']
-    # find the index of the track played
-    playedTrackI = room.queue.index(track)
-    # split the array into two parts with track played at the END of one
-    arr_a = room.queue.slice(0, playedTrackI + 1) # first half 0 - i
-    arr_b = room.queue.slice((playedTrackI + 1), room.queue.length)
 
-    # join array back together with track played + 1 at the beginning
-    updated_queue = (arr_b + arr_a)
-    room.queue = updated_queue
-    room.save
+    # TO DO: MOVE THIS TO PRIVATE METHOD FOR REUSABILITY
+    # loop through queue
+    room.queue.each_with_index do |queuedTrack, i|
+      # find first item with non-nil track
+      if queuedTrack['track']
+         # split the array into two parts with track played at the END of one
+        arr_a = room.queue.slice(0, i + 1) # first half 0 - i
+        arr_b = room.queue.slice((i + 1), room.queue.length)
 
-    room.current_track = track
-    room.save
+        # join array back together with track played + 1 at the beginning
+        updated_queue = (arr_b + arr_a)
+        room.queue = updated_queue
+        room.save
 
-    # send update of shared queue
+        room.current_track = queuedTrack
+        # record when the track started playing so we know when it should end
+        room.current_track['track']['start_time'] = (Time.now.to_f * 1000).to_i
+        room.save
+
+        ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+          'startedPlaying': room.current_track
+        })
+
+        # tell user their song was played to trigger them to send their next song
+        ActionCable.server.broadcast("user_channel_#{queuedTrack['user_id']}", {
+          'playedFromMemberQueue': true
+        })
+        return
+      end
+    end
+
+    # if there aren't any queue track return an error
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'sharedQueueChanged': room.queue
+      'error': {'message': 'There are no songs queued.'}
     })
 
-    ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'trackChanged': data
-    })
-
-    # tell user their song was played
-    ActionCable.server.broadcast("user_channel_#{data['track']['user_id']}", {
-      'playedFromMemberQueue': true
-    })
   end
 
-  def set_playing(bool)
+  def track_finished(data)
     room = Room.find(params[:room])
-    room.set_playing
+
+    # Check start timestamp to make sure track actually played
+    now = (Time.now.to_f * 1000).to_i
+    start = room.current_track['track']['start_time']
+    duration = room.current_track['track']['duration_ms']
+
+    if (now - start >= duration)
+
+      # play next track
+      if play_next_track()
+
+        updated_room = Room.find(params[:room])
+
+        ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+          'startedPlaying': updated_room.current_track
+        })
+
+        # tell user their song was played to trigger them to send their next song
+        ActionCable.server.broadcast("user_channel_#{room.current_track['user_id']}", {
+          'playedFromMemberQueue': true
+        })
+      end
+
+    else
+      # send error
+      ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+        'error': {'message': 'Error syncing'}
+      })
+    end
   end
 
   def update_user_queue(track)
-    p 'udpate user queue'
 
     room = Room.find(params[:room])
     track = current_user.tracks.create(track: track['track'])
@@ -76,6 +113,38 @@ class RoomsChannel < ApplicationCable::Channel
         'sharedQueueChanged': room.queue
       }
     })
+
+  end
+
+  private
+
+  def play_next_track
+
+    # find current room
+    room = Room.find(params[:room])
+
+    # loop through queue
+    room.queue.each_with_index do |queuedTrack, i|
+
+      # find first item with non-nil track
+      if queuedTrack['track']
+         # split the array into two parts with track played at the END of one
+        arr_a = room.queue.slice(0, i + 1) # first half 0 - i
+        arr_b = room.queue.slice((i + 1), room.queue.length)
+
+        # join array back together with track played + 1 at the beginning
+        updated_queue = (arr_b + arr_a)
+        room.queue = updated_queue
+        room.save
+
+        room.current_track = queuedTrack
+        # record when the track started playing so we know when it should end
+        room.current_track['track']['start_time'] = (Time.now.to_f * 1000).to_i
+        return room.save
+
+      end
+    end
+    return false
 
   end
 end
