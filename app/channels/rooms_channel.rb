@@ -89,6 +89,11 @@ class RoomsChannel < ApplicationCable::Channel
         ActionCable.server.broadcast("user_channel_#{updated_room.current_track['user_id']}", {
           'playedFromMemberQueue': true
         })
+      else
+        # no songs in queue
+        ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+          'playbackFinished': true
+        })
       end
 
     else
