@@ -1,7 +1,11 @@
 class Room < ApplicationRecord
   belongs_to :user
+
   has_many :memberships, dependent: :delete_all
   has_many :members, through: :memberships, source: :user
+
+  has_many :dj_memberships, dependent: :delete_all
+  has_many :djs, through: :dj_memberships, source: :user
 
   def update_track(track, user)
     updatedQueue = self.queue
@@ -15,35 +19,43 @@ class Room < ApplicationRecord
   end
 
   def add_user(user)
-    # change to '<< user'
     self.members << user
-
-    # create empty arr
-    self.current_dj_order = [] if self.current_dj_order.nil?
-    self.current_dj_order.push(user)
-
-    # create empty arr
-    self.queue = [] if self.queue.nil?
-
-    # add placeholder
-    self.queue.push({'user_id': user.id})
     self.save
   end
 
   def remove_user(user)
+    self.members.delete(user)
+    self.save
+  end
+
+  def add_dj(user)
+    self.djs << user
+
+    # add to dj order
+    self.current_dj_order = [] if self.current_dj_order.nil?
+    self.current_dj_order.push(user)
+
+    # create placeholder queue item
+    self.queue = [] if self.queue.nil?
+    self.queue.push({'user_id': user.id})
+
+    self.save
+  end
+
+  def remove_dj(user)
     # remove from queue
     position = self.queue.index{|i| i['user_id'] == user.id}
     self.queue.delete_at(position)
     self.save
 
-    # remove dj
+    # remove from dj order
     dj_i = self.current_dj_order.index{|i| i['user_id'] == user.id}
     self.current_dj_order.delete_at(dj_i)
     self.save
 
-    # remove from members
-    self.members.delete(user)
+    # remove djs
+    self.djs.delete(user)
     self.save
-
   end
+
 end
