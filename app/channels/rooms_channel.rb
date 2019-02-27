@@ -8,7 +8,7 @@ class RoomsChannel < ApplicationCable::Channel
 
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
       'memberJoined': current_user,
-      'members': room.members,
+      'membersChanged': room.members,
     })
   end
 
@@ -19,6 +19,10 @@ class RoomsChannel < ApplicationCable::Channel
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
       'djsChanged': room.current_dj_order
     })
+
+    ActionCable.server.broadcast("user_channel_#{current_user.id}", {
+      'startedDjing': true
+    })
   end
 
   def stop_djing
@@ -27,6 +31,10 @@ class RoomsChannel < ApplicationCable::Channel
 
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
       'djsChanged': room.current_dj_order
+    })
+
+    ActionCable.server.broadcast("user_channel_#{current_user.id}", {
+      'stoppedDjing': true
     })
   end
 
@@ -113,11 +121,10 @@ class RoomsChannel < ApplicationCable::Channel
     end
 
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+      'memberLeft': current_user,
       'djsChanged': room.current_dj_order,
-      'memberLeft': {
-        'members': room.members,
-        'sharedQueueChanged': room.queue
-      }
+      'membersChanged': room.members,
+      'sharedQueueChanged': room.queue
     })
 
   end
@@ -144,7 +151,7 @@ class RoomsChannel < ApplicationCable::Channel
         room.current_track['track']['start_time'] = (Time.now.to_f * 1000).to_i
 
         # Update DJ order
-        dj_i = room.current_dj_order.index{|index| index['id'] ==  queuedTrack['user_id']}
+        dj_i = room.current_dj_order.index{|index| index['id'] == queuedTrack['user_id']}
         dj_arr_a = room.current_dj_order.slice(0, dj_i)
         dj_arr_b = room.current_dj_order.slice(dj_i, room.current_dj_order.length)
         room.current_dj_order = (dj_arr_b + dj_arr_a)

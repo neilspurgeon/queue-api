@@ -19,6 +19,11 @@ class Room < ApplicationRecord
   end
 
   def add_user(user)
+    if self.members.where(id: user.id).exists?
+      p 'user is already a member'
+      return
+    end
+
     self.members << user
     self.save
   end
@@ -29,6 +34,11 @@ class Room < ApplicationRecord
   end
 
   def add_dj(user)
+    if self.djs.where(id: user.id).exists?
+      p 'user is already a dj'
+      return
+    end
+
     self.djs << user
 
     # add to dj order
@@ -49,7 +59,7 @@ class Room < ApplicationRecord
     self.save
 
     # remove from dj order
-    dj_i = self.current_dj_order.index{|i| i['user_id'] == user.id}
+    dj_i = self.current_dj_order.index{|i| i['id'] == user.id}
     self.current_dj_order.delete_at(dj_i)
     self.save
 
