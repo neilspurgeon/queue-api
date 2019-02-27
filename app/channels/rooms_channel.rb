@@ -92,7 +92,8 @@ class RoomsChannel < ApplicationCable::Channel
       else
         # no songs in queue
         ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-          'playbackFinished': true
+          'playbackFinished': true,
+          'roomReady': false
         })
       end
 
@@ -117,6 +118,10 @@ class RoomsChannel < ApplicationCable::Channel
     room.update_track(track, current_user)
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
       'sharedQueueChanged': room.queue
+    })
+
+    ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+      'roomReady': true
     })
   end
 
