@@ -42,13 +42,14 @@ class RoomsChannel < ApplicationCable::Channel
     room = Room.find(params[:room])
 
     if play_next_track()
+      updated_room = Room.find(params[:room])
       ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-          'startedPlaying': room.current_track,
-          'djsChanged':     room.current_dj_order
+          'startedPlaying': updated_room.current_track,
+          'djsChanged':     updated_room.current_dj_order
         })
 
       # tell user their song was played to trigger them to send their next song
-      ActionCable.server.broadcast("user_channel_#{queuedTrack['user_id']}", {
+      ActionCable.server.broadcast("user_channel_#{updated_room.current_track['user_id']}", {
         'playedFromMemberQueue': true
       })
     else
@@ -134,10 +135,10 @@ class RoomsChannel < ApplicationCable::Channel
   def play_next_track
     room = Room.find(params[:room])
 
-    room.queue.each_with_index do |queuedTrack, i|
+    room.queue.each_with_index do |next_track, i|
 
       # find first item with non-nil track
-      if queuedTrack['track']
+      if next_track['track']
 
         # split the array into two parts with track played at the END of one
         queue_arr_a = room.queue.slice(0, i + 1) # first half 0 - i
@@ -146,12 +147,12 @@ class RoomsChannel < ApplicationCable::Channel
         # join array back together with track played + 1 at the beginning
         room.queue = (queue_arr_b + queue_arr_a)
 
-        room.current_track = queuedTrack
+        room.current_track = next_track
         # record when the track started playing so we know when it should end
         room.current_track['track']['start_time'] = (Time.now.to_f * 1000).to_i
 
         # Update DJ order
-        dj_i = room.current_dj_order.index{|index| index['id'] == queuedTrack['user_id']}
+        dj_i = room.current_dj_order.index{|index| index['id'] == next_track['user_id']}
         dj_arr_a = room.current_dj_order.slice(0, dj_i)
         dj_arr_b = room.current_dj_order.slice(dj_i, room.current_dj_order.length)
         room.current_dj_order = (dj_arr_b + dj_arr_a)
