@@ -12,8 +12,9 @@ class RoomsChannel < ApplicationCable::Channel
     })
   end
 
-  def start_djing(track)
+  def start_djing(data)
     room = Room.find(params[:room])
+    track = data['track']
     room.add_dj(current_user)
 
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
@@ -26,8 +27,8 @@ class RoomsChannel < ApplicationCable::Channel
 
     if (track)
       updated_room = Room.find(params[:room])
-      track = current_user.tracks.create(track: track['track'])
-      updated_room.update_track(track, current_user)
+      created_track = current_user.tracks.create(track: track)
+      updated_room.update_track(created_track, current_user)
 
       ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
         'sharedQueueChanged': updated_room.queue
@@ -51,6 +52,13 @@ class RoomsChannel < ApplicationCable::Channel
     ActionCable.server.broadcast("user_channel_#{current_user.id}", {
       'stoppedDjing': true
     })
+
+    if room.djs.count < 1
+      ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+        'roomNotReady': true
+      })
+    end
+
   end
 
   def start_playing()
@@ -74,7 +82,7 @@ class RoomsChannel < ApplicationCable::Channel
     end
   end
 
-  def track_finished(data)
+  def track_finished
     room = Room.find(params[:room])
 
     # Check start timestamp to make sure track actually played
@@ -100,7 +108,7 @@ class RoomsChannel < ApplicationCable::Channel
         # no songs in queue
         ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
           'playbackFinished': true,
-          'roomReady': false
+          'roomNotReady': true
         })
       end
 
@@ -113,22 +121,23 @@ class RoomsChannel < ApplicationCable::Channel
 
   def update_user_queue(track)
     room = Room.find(params[:room])
-    track = current_user.tracks.create(track: track['track'])
+    created_track = current_user.tracks.create(track: track['track'])
 
     # this should really only broadcast to the room host
     # I think we can broadcast on the host channel here, just need to store host userID on Room to use
-    if room.update_track(track, current_user)
+    if room.update_track(created_track, current_user)
       updated_room = Room.find(params[:room])
       ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
         'sharedQueueChanged': updated_room.queue
       })
-    end
 
-    unless room.queue.nil?
-      # TO DO: add conditional so this only send if the roomready changes
-      ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-        'roomReady': true
-      })
+      if room.queue.find {|e| e['track'] }
+        # TO DO: add conditional so this only send if the roomready changes
+        ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+          'roomReady': true
+        })
+      end
+
     end
   end
 
