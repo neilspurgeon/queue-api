@@ -8,10 +8,12 @@ class Room < ApplicationRecord
   has_many :djs, through: :dj_memberships, source: :user
 
   def update_track(track, user)
-    updatedQueue = self.queue
-    i = queue.index{|i| i['user_id'] == user.id}
-    updatedQueue[i] = track
-    self.update_column(:queue, updatedQueue)
+    unless self.queue.nil?
+      updatedQueue = self.queue
+      i = queue.index{|i| i['user_id'] == user.id}
+      updatedQueue[i] = track
+      self.update_column(:queue, updatedQueue)
+    end
   end
 
   def set_playing(bool)
