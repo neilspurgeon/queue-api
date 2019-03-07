@@ -18,7 +18,8 @@ class RoomsChannel < ApplicationCable::Channel
     room.add_dj(current_user)
 
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'djsChanged': room.current_dj_order
+      'djsChanged': room.current_dj_order),
+      'membersChanged': user_json(room.members.with_attached_avatar)
     })
 
     ActionCable.server.broadcast("user_channel_#{current_user.id}", {
@@ -196,4 +197,12 @@ class RoomsChannel < ApplicationCable::Channel
     return false
 
   end
-end
+
+  def user_json(users)
+    json = []
+    users.each do |user|
+      updated_user = user.attributes.merge({'avatar_url': user.avatar.attached? ? user.avatar.service_url : nil})
+      json << updated_user
+    end
+    return json
+  end
