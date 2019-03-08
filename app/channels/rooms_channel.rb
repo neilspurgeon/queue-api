@@ -1,15 +1,15 @@
 class RoomsChannel < ApplicationCable::Channel
-
   def subscribed
     stream_from "rooms_channel_#{params[:room]}"
 
     room = Room.find(params[:room])
     room.add_user(current_user)
 
-    ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'memberJoined': current_user,
-      'membersChanged': room.members,
-    })
+    ActionCable.server.broadcast("rooms_channel_#{params[:room]}",
+      {
+        'memberJoined': current_user,
+        'membersChanged': user_json(room.members)
+      })
   end
 
   def start_djing(data)
@@ -18,15 +18,15 @@ class RoomsChannel < ApplicationCable::Channel
     room.add_dj(current_user)
 
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'djsChanged': room.current_dj_order),
-      'membersChanged': user_json(room.members.with_attached_avatar)
+      'djsChanged': room.current_dj_order,
+      'membersChanged': user_json(room.members)
     })
 
     ActionCable.server.broadcast("user_channel_#{current_user.id}", {
       'startedDjing': true
     })
 
-    if (track)
+    if track
       updated_room = Room.find(params[:room])
       created_track = current_user.tracks.create(track: track)
       updated_room.update_track(created_track, current_user)
@@ -59,12 +59,9 @@ class RoomsChannel < ApplicationCable::Channel
         'roomNotReady': true
       })
     end
-
   end
 
   def start_playing()
-    room = Room.find(params[:room])
-
     if play_next_track()
       updated_room = Room.find(params[:room])
       ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
@@ -154,10 +151,9 @@ class RoomsChannel < ApplicationCable::Channel
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
       'memberLeft': current_user,
       'djsChanged': room.current_dj_order,
-      'membersChanged': room.members,
+      'membersChanged': user_json(room.members)
       'sharedQueueChanged': room.queue
     })
-
   end
 
   private
@@ -195,14 +191,15 @@ class RoomsChannel < ApplicationCable::Channel
     end
 
     return false
-
   end
 
   def user_json(users)
     json = []
     users.each do |user|
-      updated_user = user.attributes.merge({'avatar_url': user.avatar.attached? ? user.avatar.service_url : nil})
+      updated_user = user.as_json(only: [:first_name, :last_name, :email])
+      updated_user['avatar_url'] = user.avatar.attached? ? user.avatar.service_url : nil
       json << updated_user
     end
     return json
   end
+end
