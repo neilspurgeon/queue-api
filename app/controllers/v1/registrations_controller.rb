@@ -1,17 +1,23 @@
 class V1::RegistrationsController < Devise::RegistrationsController
 
   def update_avatar
-    current_user.avatar.attach(io: image_io, filename: 'avatar')
+    current_user.update(avatar: image_io)
 
-    render :json => {'avatar_url': current_user.avatar.service_url}
+    urls = [
+      {small: current_user.avatar[:small].url},
+      {medium: current_user.avatar[:medium].url},
+      {large: current_user.avatar[:large].url},
+    ]
+    current_user.update(avatar_urls: urls)
 
+    render :json => current_user
   end
 
   private
 
   def image_io
     decoded_image = Base64.decode64(params[:avatar])
-      StringIO.new(decoded_image)
+    StringIO.new(decoded_image)
   end
 
   def sign_up_params

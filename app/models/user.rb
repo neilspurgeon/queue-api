@@ -9,6 +9,6 @@ class User < ApplicationRecord
   has_many :rooms, through: :memberships
   has_many :tracks
 
-  has_one_attached :avatar
+  include ImageUploader[:avatar]
 
 end

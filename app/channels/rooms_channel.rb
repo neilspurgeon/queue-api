@@ -151,7 +151,7 @@ class RoomsChannel < ApplicationCable::Channel
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
       'memberLeft': current_user,
       'djsChanged': room.current_dj_order,
-      'membersChanged': user_json(room.members)
+      'membersChanged': user_json(room.members),
       'sharedQueueChanged': room.queue
     })
   end

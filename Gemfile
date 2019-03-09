@@ -45,3 +45,5 @@ gem 'table_print'
 gem 'dotenv-rails'
 gem "bootsnap", "~> 1.4"
 gem 'aws-sdk'
+gem "shrine"
+gem "image_processing", "~> 1.0"
