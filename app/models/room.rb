@@ -45,7 +45,7 @@ class Room < ApplicationRecord
 
     # add to dj order
     self.current_dj_order = [] if self.current_dj_order.nil?
-    self.current_dj_order.push(user_data(user))
+    self.current_dj_order.push(user)
 
     # create placeholder queue item
     self.queue = [] if self.queue.nil?
@@ -70,13 +70,4 @@ class Room < ApplicationRecord
     self.save
   end
 
-end
-
-private
-
-
-def user_data(user)
-  updated_user = user.as_json(only: [:first_name, :last_name, :email])
-  updated_user['avatar_url'] = user.avatar.attached? ? user.avatar.service_url : nil
-  return updated_user
 end

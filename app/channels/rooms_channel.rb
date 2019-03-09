@@ -8,7 +8,7 @@ class RoomsChannel < ApplicationCable::Channel
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}",
       {
         'memberJoined': current_user,
-        'membersChanged': user_json(room.members)
+        'membersChanged': room.members
       })
   end
 
@@ -19,7 +19,7 @@ class RoomsChannel < ApplicationCable::Channel
 
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
       'djsChanged': room.current_dj_order,
-      'membersChanged': user_json(room.members)
+      'membersChanged': room.members
     })
 
     ActionCable.server.broadcast("user_channel_#{current_user.id}", {
@@ -151,7 +151,7 @@ class RoomsChannel < ApplicationCable::Channel
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
       'memberLeft': current_user,
       'djsChanged': room.current_dj_order,
-      'membersChanged': user_json(room.members),
+      'membersChanged': room.members,
       'sharedQueueChanged': room.queue
     })
   end
@@ -191,15 +191,5 @@ class RoomsChannel < ApplicationCable::Channel
     end
 
     return false
-  end
-
-  def user_json(users)
-    json = []
-    users.each do |user|
-      updated_user = user.as_json(only: [:first_name, :last_name, :email])
-      updated_user['avatar_url'] = user.avatar.attached? ? user.avatar.service_url : nil
-      json << updated_user
-    end
-    return json
   end
 end

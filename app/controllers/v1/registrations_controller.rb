@@ -3,11 +3,11 @@ class V1::RegistrationsController < Devise::RegistrationsController
   def update_avatar
     current_user.update(avatar: image_io)
 
-    urls = [
-      {small: current_user.avatar[:small].url},
-      {medium: current_user.avatar[:medium].url},
-      {large: current_user.avatar[:large].url},
-    ]
+    urls = {
+      small: current_user.avatar[:small].url,
+      medium: current_user.avatar[:medium].url,
+      large: current_user.avatar[:large].url,
+    }
     current_user.update(avatar_urls: urls)
 
     render :json => current_user

@@ -1,5 +1,5 @@
 if user_signed_in?
   json.user do
-    json.(current_user, :id, :email, :first_name, :last_name)
+    json.(current_user, :id, :email, :first_name, :last_name, :avatar_urls)
   end
 end
