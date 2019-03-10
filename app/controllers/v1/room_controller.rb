@@ -11,12 +11,15 @@ class V1::RoomController < ApplicationController
     room = Room.new(room_params)
     room.user_id = current_user.id
 
-    if room.save
-      render json: room.to_json
+    if room.max_djs > 0 && room.max_djs <= 5
+      if room.save
+        render json: room.to_json
+      else
+        render :json => {'error': 'could not create room'}
+      end
     else
       render :json => {'error': 'could not create room'}
     end
-
   end
 
   def show
@@ -43,7 +46,7 @@ class V1::RoomController < ApplicationController
   private
 
   def room_params
-    params.require(:room).permit(:name)
+    params.require(:room).permit(:name, :description, :private, :max_djs)
   end
 
 end
