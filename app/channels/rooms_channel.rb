@@ -71,6 +71,20 @@ class RoomsChannel < ApplicationCable::Channel
     end
   end
 
+
+  def send_message(message)
+    room = Room.find(params[:room])
+    p message
+    new_message = current_user.messages.new(text: message['text'], room: room)
+
+    if (new_message.save)
+      ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+        type: 'RECEIVED_MESSAGE',
+        data: new_message.as_json(:include => :user)
+      })
+    end
+  end
+
   def start_playing()
     if play_next_track()
       updated_room = Room.find(params[:room])

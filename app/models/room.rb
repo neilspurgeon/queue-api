@@ -7,6 +7,8 @@ class Room < ApplicationRecord
   has_many :dj_memberships, dependent: :delete_all
   has_many :djs, through: :dj_memberships, source: :user
 
+  has_many :messages
+
   def update_track(track, user)
     unless self.queue.nil?
       updatedQueue = self.queue
