@@ -5,11 +5,15 @@ class RoomsChannel < ApplicationCable::Channel
     room = Room.find(params[:room])
     room.add_user(current_user)
 
-    ActionCable.server.broadcast("rooms_channel_#{params[:room]}",
-      {
-        'memberJoined': current_user,
-        'membersChanged': room.members
-      })
+    ActionCable.server.broadcast("rooms_channel_#{params[:room]}",{
+      type: 'RECEIVED_MEMBER_JOINED',
+      data: current_user,
+    })
+
+    ActionCable.server.broadcast("rooms_channel_#{params[:room]}",{
+      type: 'RECEIVED_MEMBERS_CHANGED',
+      data: room.members,
+    })
   end
 
   def start_djing(data)
@@ -18,12 +22,13 @@ class RoomsChannel < ApplicationCable::Channel
     room.add_dj(current_user)
 
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'djsChanged': room.current_dj_order,
-      'membersChanged': room.members
+      type: 'RECEIVED_DJS_CHANGED',
+      data: room.current_dj_order,
     })
 
     ActionCable.server.broadcast("user_channel_#{current_user.id}", {
-      'startedDjing': true
+      type: 'RECEIVED_STARTED_DJING',
+      data: true
     })
 
     if track
@@ -32,12 +37,14 @@ class RoomsChannel < ApplicationCable::Channel
       updated_room.update_track(created_track, current_user)
 
       ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-        'sharedQueueChanged': updated_room.queue
+        type: 'RECEIVED_SHARED_QUEUE_CHANGED',
+        data: updated_room.queue
       })
 
       # TO DO: add conditional so this only send if the roomready changes
       ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-        'roomReady': true
+        type: 'RECEIVED_ROOM_READY',
+        data: true
       })
     end
   end
@@ -47,16 +54,19 @@ class RoomsChannel < ApplicationCable::Channel
     room.remove_dj(current_user)
 
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'djsChanged': room.current_dj_order
+      type: 'RECEIVED_DJS_CHANGED',
+      data: room.current_dj_order
     })
 
     ActionCable.server.broadcast("user_channel_#{current_user.id}", {
-      'stoppedDjing': true
+      type: 'RECIVED_STOPPED_DJING',
+      data: true,
     })
 
     if room.djs.count < 1
       ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-        'roomNotReady': true
+        type: 'RECEIVED_ROOM_READY',
+        data: false
       })
     end
   end
@@ -65,18 +75,25 @@ class RoomsChannel < ApplicationCable::Channel
     if play_next_track()
       updated_room = Room.find(params[:room])
       ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-          'startedPlaying': updated_room.current_track,
-          'djsChanged':     updated_room.current_dj_order
-        })
+        type: 'RECEIVED_STARTED_PLAYING',
+        data: updated_room.current_track,
+      })
+
+      ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+        type: 'RECEIVED_DJS_CHANGED',
+        data: updated_room.current_dj_order,
+      })
 
       # tell user their song was played to trigger them to send their next song
       ActionCable.server.broadcast("user_channel_#{updated_room.current_track['user_id']}", {
-        'playedFromMemberQueue': true
+        type: 'RECEIVED_PLAYED_FROM_MEMBER_QUEUE',
+        data: true,
       })
     else
       ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'error': {'message': 'There are no songs queued.'}
-    })
+        type: 'RECEIVED_ERROR',
+        data: 'There are no songs queued.',
+      })
     end
   end
 
@@ -94,25 +111,36 @@ class RoomsChannel < ApplicationCable::Channel
 
         updated_room = Room.find(params[:room])
         ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-          'startedPlaying': updated_room.current_track,
-          'djsChanged':     updated_room.current_dj_order
+          type: 'RECEIVED_STARTED_PLAYING',
+          data: updated_room.current_track,
+        })
+
+        ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+          type: 'RECEIVED_DJS_CHANGED',
+          data: updated_room.current_dj_order
         })
 
         # tell user their song was played to trigger them to send their next song
         ActionCable.server.broadcast("user_channel_#{updated_room.current_track['user_id']}", {
-          'playedFromMemberQueue': true
+          type: 'RECEIVED_PLAYED_FROM_MEMBER_QUEUE',
+          data: true,
         })
       else
         # no songs in queue
         ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-          'playbackFinished': true,
-          'roomNotReady': true
+          type: 'RECEIVED_PLAYBACK_FINISHED',
+          data: true,
+        })
+        ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+          type: 'RECEIVED_ROOM_READY',
+          data: false,
         })
       end
 
     else
       ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-        'error': {'message': 'Error syncing'}
+        type: 'RECEIVED_ERROR',
+        data: 'Error syncing',
       })
     end
   end
@@ -126,13 +154,15 @@ class RoomsChannel < ApplicationCable::Channel
     if room.update_track(created_track, current_user)
       updated_room = Room.find(params[:room])
       ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-        'sharedQueueChanged': updated_room.queue
+        type: 'RECEIVED_SHARED_QUEUE_CHANGED',
+        data: updated_room.queue
       })
 
       if room.queue.find {|e| e['track'] }
         # TO DO: add conditional so this only send if the roomready changes
         ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-          'roomReady': true
+          type: 'RECEIVED_ROOM_READY',
+          data: true
         })
       end
 
@@ -149,10 +179,23 @@ class RoomsChannel < ApplicationCable::Channel
     end
 
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
-      'memberLeft': current_user,
-      'djsChanged': room.current_dj_order,
-      'membersChanged': room.members,
-      'sharedQueueChanged': room.queue
+      type: 'RECEIVED_MEMBER_LEFT',
+      data: current_user,
+    })
+
+    ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+      type: 'RECEIVED_DJS_CHANGED',
+      data: room.current_dj_order,
+    })
+
+    ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+      type: 'RECEIVED_MEMBERS_CHANGED',
+      data: room.members,
+    })
+
+    ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
+      type: 'RECEIVED_SHARED_QUEUE_CHANGED',
+      data: room.queue,
     })
   end
 
