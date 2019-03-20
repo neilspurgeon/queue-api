@@ -22,6 +22,14 @@ class Room < ApplicationRecord
     self.playing = bool
   end
 
+  def play(track)
+    self.playing = true
+    recently_played = self.recently_played.unshift(track)
+    self.recently_played = recently_played[0..3]
+
+    self.save
+  end
+
   def add_user(user)
     if self.members.where(id: user.id).exists?
       p 'user is already a member'

@@ -223,6 +223,8 @@ class RoomsChannel < ApplicationCable::Channel
       # find first item with non-nil track
       if next_track['track']
 
+        room.play(next_track['user_id'])
+
         # split the array into two parts with track played at the END of one
         queue_arr_a = room.queue.slice(0, i + 1) # first half 0 - i
         queue_arr_b = room.queue.slice((i + 1), room.queue.length)
