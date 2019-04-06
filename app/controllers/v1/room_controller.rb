@@ -7,6 +7,13 @@ class V1::RoomController < ApplicationController
     render json: rooms.to_json
   end
 
+  def index_top
+    rooms = Room.includes(:members).where(playing: true).order("memberships_count desc").limit(10)
+    render json: rooms.to_json(
+      :include => :members
+    )
+  end
+
   def create
     room = Room.new(room_params)
     room.user_id = current_user.id

@@ -15,6 +15,7 @@ Rails.application.routes.draw do
         get 'users/current', to: 'sessions#show'
         post 'rooms', to: 'room#create'
         get 'rooms', to: 'room#index'
+        get 'rooms/top', to: 'room#index_top'
         get 'rooms/:id', to: 'room#show'
         put 'users/avatar', to: 'registrations#update_avatar'
       end

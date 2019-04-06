@@ -14,6 +14,13 @@ class RoomsChannel < ApplicationCable::Channel
       type: 'RECEIVED_MEMBERS_CHANGED',
       data: room.members,
     })
+
+    if room.playing
+      ActionCable.server.broadcast("user_channel_#{current_user.id}", {
+        type: 'RECEIVED_JOINED_ROOM_IS_PLAYING',
+        data: room.current_track,
+      })
+    end
   end
 
   def start_djing(data)
@@ -123,6 +130,8 @@ class RoomsChannel < ApplicationCable::Channel
 
       if play_next_track()
 
+        p 'PLAY NEXT TRACK TRUE!!!!!!'
+
         updated_room = Room.find(params[:room])
         ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
           type: 'RECEIVED_STARTED_PLAYING',
@@ -188,7 +197,7 @@ class RoomsChannel < ApplicationCable::Channel
     room.remove_user(current_user)
 
     # remove dj
-    if room.djs.find(current_user)
+    if room.djs.include? current_user
       room.remove_dj(current_user)
     end
 
@@ -219,11 +228,20 @@ class RoomsChannel < ApplicationCable::Channel
     room = Room.find(params[:room])
 
     room.queue.each_with_index do |next_track, i|
+      # byebug
+      p 'PLAYNEXT TRACK!!!!!!'
 
       # find first item with non-nil track
       if next_track['track']
 
-        room.play(next_track['user_id'])
+        room.play(next_track['track']['album'])
+
+        room.current_track = next_track
+        # record when the track started playing so we know when it should end
+        room.current_track['track']['start_time'] = (Time.now.to_f * 1000).to_i
+
+        # remove track from queue but leave placeholder
+        room.queue[i] = {'user_id': current_user.id}
 
         # split the array into two parts with track played at the END of one
         queue_arr_a = room.queue.slice(0, i + 1) # first half 0 - i
@@ -231,10 +249,6 @@ class RoomsChannel < ApplicationCable::Channel
 
         # join array back together with track played + 1 at the beginning
         room.queue = (queue_arr_b + queue_arr_a)
-
-        room.current_track = next_track
-        # record when the track started playing so we know when it should end
-        room.current_track['track']['start_time'] = (Time.now.to_f * 1000).to_i
 
         # Update DJ order
         dj_i = room.current_dj_order.index{|index| index['id'] == next_track['user_id']}
