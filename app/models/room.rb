@@ -54,7 +54,12 @@ class Room < ApplicationRecord
   def add_dj(user)
     if self.djs.where(id: user.id).exists?
       p 'user is already a dj'
-      return
+      return false
+    end
+
+    if self.djs.count === self.max_djs
+      p 'all dj spots are full'
+      return false
     end
 
     self.djs << user

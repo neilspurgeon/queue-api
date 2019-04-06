@@ -28,6 +28,7 @@ class RoomsChannel < ApplicationCable::Channel
     track = data['track']
     room.add_dj(current_user)
 
+    # TO DO: only broadcast this if user is successfully added as a dj
     ActionCable.server.broadcast("rooms_channel_#{params[:room]}", {
       type: 'RECEIVED_DJS_CHANGED',
       data: room.current_dj_order,
