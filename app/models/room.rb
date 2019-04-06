@@ -42,6 +42,12 @@ class Room < ApplicationRecord
 
   def remove_user(user)
     self.members.delete(user)
+
+    # Stop playing if there are no members left
+    if self.members.count <= 1
+      self.playing = false
+      self.current_track = nil
+    end
     self.save
   end
 
