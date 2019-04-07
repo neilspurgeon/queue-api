@@ -8,7 +8,7 @@ class V1::RoomController < ApplicationController
   end
 
   def index_top
-    rooms = Room.includes(:members).where(playing: true).order("memberships_count desc").limit(10)
+    rooms = Room.includes(:members).where({playing: true, private: false}).order("memberships_count desc").limit(10)
     render json: rooms.to_json(
       :include => :members
     )
